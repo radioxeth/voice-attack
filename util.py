@@ -7,15 +7,27 @@ import numpy as np
 
 
 def load_audio_file(file_path):
-    # Function to load an audio file
-    y, sr = librosa.load(file_path, mono=False)
-    print(sr)
+    y, sr = torchaudio.load(file_path)
     return y, sr
 
 
-def compute_spectrogram(audio, sr):
+def resample_audio(audio, sr, new_sr):
+    resampler = torchaudio.transforms.Resample(sr, new_sr)
+    audio_resampled = resampler(audio)
+    return audio_resampled, new_sr
+
+
+def compute_mel_spectrogram(audio, sr, n_fft=2048, hop_length=512, n_mels=80):
     # Function to compute a spectrogram from an audio signal
-    S = librosa.feature.melspectrogram(y=audio, sr=sr)
+    # transform = torchaudio.transforms.MelSpectrogram(
+    #     sample_rate=sr, n_fft=n_fft, hop_length=hop_length
+    # )
+    # log_S = transform(audio)
+    audio = audio.cpu()  # Move tensor to CPU if it's not already
+    audio = audio.numpy()  # Convert to NumPy array
+    S = librosa.feature.melspectrogram(
+        y=audio, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels
+    )
     log_S = librosa.power_to_db(S=S, ref=np.max)
     return log_S
 
@@ -38,11 +50,35 @@ def compute_euclidean_distances(log_spectrogram1, log_spectrogram2):
     return euclidean_distances
 
 
+def audio_mfcc_transform(audio, sr, n_mfcc=13, n_fft=2048, hop_length=512, n_mels=23):
+    mfcc_transform = torchaudio.transforms.MFCC(
+        n_mfcc=n_mfcc, sample_rate=sr, log_mels=True
+    )
+    print(type(audio))
+    print(audio.size())
+    mfcc = mfcc_transform(audio)
+    return mfcc
+
+
+### function to vad the waveform
+def vad_waveform(audio, sr):
+
+    # detect voice activity
+    audio = torchaudio.functional.vad(audio, sr, trigger_time=0.5, trigger_level=10)
+    return audio
+
+
 ### function to center and pad the waveform
-def center_and_pad_waveforms(y1, sr1, y2, sr2):
+def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
+    print(type(audio1))
+    audio1 = audio1.cpu()  # Move tensor to CPU if it's not already
+    audio1 = audio1.numpy()  # Convert to NumPy array
+
+    audio2 = audio2.cpu()  # Move tensor to CPU if it's not already
+    audio2 = audio2.numpy()  # Convert to NumPy array
     # Detect the onsets
-    onset_frames1 = librosa.onset.onset_detect(y=y1, sr=sr1)
-    onset_frames2 = librosa.onset.onset_detect(y=y2, sr=sr2)
+    onset_frames1 = librosa.onset.onset_detect(y=audio1, sr=sr1)
+    onset_frames2 = librosa.onset.onset_detect(y=audio2, sr=sr2)
 
     # Convert frames to sample indices
     onset_samples1 = librosa.frames_to_samples(onset_frames1)[0]
@@ -52,15 +88,17 @@ def center_and_pad_waveforms(y1, sr1, y2, sr2):
     max_onset = max(onset_samples1, onset_samples2)
 
     # Pad the beginning of each audio signal with zeros to align the onsets
-    y1_padded = np.pad(y1, (max_onset - onset_samples1, 0), mode="constant")
-    y2_padded = np.pad(y2, (max_onset - onset_samples2, 0), mode="constant")
+    audio1_padded = np.pad(audio1, (max_onset - onset_samples1, 0), mode="constant")
+    audio2_padded = np.pad(audio2, (max_onset - onset_samples2, 0), mode="constant")
 
     # Trim or extend both signals to the same length
-    max_length = max(len(y1_padded), len(y2_padded))
-    y1_padded = librosa.util.fix_length(y1_padded, size=max_length)
-    y2_padded = librosa.util.fix_length(y2_padded, size=max_length)
-
-    return y1_padded, y2_padded
+    max_length = max(len(audio1_padded), len(audio2_padded))
+    audio1_padded = librosa.util.fix_length(audio1_padded, size=max_length)
+    audio2_padded = librosa.util.fix_length(audio2_padded, size=max_length)
+    print(type(audio1_padded))
+    audio1 = torch.from_numpy(audio1_padded)
+    audio2 = torch.from_numpy(audio2_padded)
+    return audio1, audio2
 
 
 def print_waveform(
@@ -99,7 +137,9 @@ def print_waveform(
 
 ### Define a function to print the figure
 def print_figure(audio_path, figure_title, log_spectrogram, sr):
-    # Visualize the original and equalized Mel spectrograms
+    # # Visualize the original and equalized Mel spectrograms
+    # if isinstance(log_spectrogram, torch.Tensor):
+    #     log_spectrogram = log_spectrogram.cpu().numpy()
     plt.figure(figsize=(12, 8))
     plt.subplot(1, 1, 1)
     librosa.display.specshow(log_spectrogram, sr=sr, x_axis="time", y_axis="mel")
