@@ -46,31 +46,35 @@ def audio_distance(
     audio1 = vad_waveform(audio1[0], sr1)
     audio2 = vad_waveform(audio2[0], sr2)
 
-    # print_waveform(audio1, sr1, "VAD Waveform 1", f"waveforms/vad_waveform1 {now}.png")
-    # print_waveform(audio2, sr2, "VAD Waveform 2", f"waveforms/vad_waveform2 {now}.png")
+    print_waveform(
+        audio1, sr1, "VAD Waveform 1", f"{waveforms_dir}/{id}-vad_waveform1-{now}.png"
+    )
+    print_waveform(
+        audio2, sr2, "VAD Waveform 2", f"{waveforms_dir}/{id}-vad_waveform2-{now}.png"
+    )
     audio1, audio2 = center_and_pad_waveforms(audio1, sr1, audio2, sr2)
 
-    print_waveform(
-        audio1,
-        sr1,
-        f"Padded VAD Waveform {audio_file1}",
-        f"{waveforms_dir}/{id}-padded_vad_waveform1-{now}.png",
-    )
-    print_waveform(
-        audio2,
-        sr2,
-        f"Padded VAD Waveform {audio_file2}",
-        f"{waveforms_dir}/{id}-padded_vad_waveform2-{now}.png",
-    )
-    mfcc1 = audio_mfcc_transform(audio1, sr1, n_mels=80)
-    mfcc2 = audio_mfcc_transform(audio2, sr2, n_mels=80)
+    # print_waveform(
+    #     audio1,
+    #     sr1,
+    #     f"Padded VAD Waveform {audio_file1}",
+    #     f"{waveforms_dir}/{id}-padded_vad_waveform1-{now}.png",
+    # )
+    # print_waveform(
+    #     audio2,
+    #     sr2,
+    #     f"Padded VAD Waveform {audio_file2}",
+    #     f"{waveforms_dir}/{id}-padded_vad_waveform2-{now}.png",
+    # )
+    # mfcc1 = audio_mfcc_transform(audio1, sr1, n_mels=80)
+    # mfcc2 = audio_mfcc_transform(audio2, sr2, n_mels=80)
 
-    print(f"MFCC 1 {audio_file1}", mfcc1)
-    print(f"MFCC 2 {audio_file2}", mfcc2)
+    # print(f"MFCC 1 {audio_file1}", mfcc1)
+    # print(f"MFCC 2 {audio_file2}", mfcc2)
 
     # Compute spectrograms
-    spectrogram1 = compute_mel_spectrogram(audio1, sr1, n_mels=80)
-    spectrogram2 = compute_mel_spectrogram(audio2, sr2, n_mels=80)
+    spectrogram1 = compute_mel_spectrogram(audio1, sr1, n_mels=40)
+    spectrogram2 = compute_mel_spectrogram(audio2, sr2, n_mels=40)
     print_figure(
         f"{generated_images_dir}/{id}-spectrogram1-{now}.png",
         f"{audio_file1} mel spectrogram",
@@ -95,18 +99,19 @@ def audio_distance(
     )
 
     # Compute distance
-    distances = compute_euclidean_distances(audio1, audio2)
+    audio_distance = compute_euclidean_distances(audio1, audio2)
 
-    print_waveform(
-        distances,
-        sr1,
-        f"Euclidean Distance {id}",
-        f"{waveforms_dir}/{id}-euc_distance-{now}.png",
-    )
+    # print_waveform(
+    #     audio_distance,
+    #     sr1,
+    #     f"Euclidean Distance {id}",
+    #     f"{waveforms_dir}/{id}-euc_distance-{now}.png",
+    # )
     output_file = f"{generated_audio_dir}/{id}-euc_distance-{now}.wav"
-    save_wav(distances, sr1, output_file)
+    save_wav(audio_distance, sr1, output_file)
 
     print(f"Distance computed and saved to {output_file}")
+    return output_file
 
 
 def main():

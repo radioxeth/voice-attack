@@ -54,23 +54,26 @@ def audio_mfcc_transform(audio, sr, n_mfcc=13, n_fft=2048, hop_length=512, n_mel
     mfcc_transform = torchaudio.transforms.MFCC(
         n_mfcc=n_mfcc, sample_rate=sr, log_mels=True
     )
-    print(type(audio))
-    print(audio.size())
     mfcc = mfcc_transform(audio)
     return mfcc
 
 
 ### function to vad the waveform
 def vad_waveform(audio, sr):
-
     # detect voice activity
-    audio = torchaudio.functional.vad(audio, sr, trigger_time=0.5, trigger_level=10)
+    audio = torchaudio.functional.vad(
+        audio,
+        sr,
+        trigger_time=0.55,
+        trigger_level=7,
+        noise_reduction_amount=1.65,
+        search_time=0.55,
+    )
     return audio
 
 
 ### function to center and pad the waveform
 def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
-    print(type(audio1))
     audio1 = audio1.cpu()  # Move tensor to CPU if it's not already
     audio1 = audio1.numpy()  # Convert to NumPy array
 
@@ -95,7 +98,7 @@ def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
     max_length = max(len(audio1_padded), len(audio2_padded))
     audio1_padded = librosa.util.fix_length(audio1_padded, size=max_length)
     audio2_padded = librosa.util.fix_length(audio2_padded, size=max_length)
-    print(type(audio1_padded))
+
     audio1 = torch.from_numpy(audio1_padded)
     audio2 = torch.from_numpy(audio2_padded)
     return audio1, audio2
@@ -172,7 +175,7 @@ def print_euclidean_distance_figure(
 
 
 ### convert audio_waveform to audio as a .wav file
-def save_wav(audio_waveform, sr, wav_file_path):
+def save_wav(audio_waveform, sr, wav_file_path, format="wav"):
     # Convert the 1D NumPy array to a 2D array with shape [1, N]
     audio_waveform_2d = np.expand_dims(audio_waveform, axis=0)
     # Convert the NumPy array to a PyTorch tensor
@@ -182,5 +185,16 @@ def save_wav(audio_waveform, sr, wav_file_path):
         wav_file_path,
         audio_waveform_tensor,
         sr,
-        format="wav",
+        format=format,
     )
+
+
+def clean_text(text, clean=True, strip=False, lower=False):
+    if clean:
+        for symbol in "_-!'(),.:;?":
+            text = text.replace(symbol, "")
+    if strip:
+        text = text.strip()
+    if lower:
+        text = text.lower()
+    return text

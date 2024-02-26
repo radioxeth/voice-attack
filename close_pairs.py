@@ -1,5 +1,18 @@
 import itertools
 from Levenshtein import distance
+import pandas as pd
+
+PHRASE_COLUMN = "sentence"
+DELIMITER = "\t"
+
+INPUT_FILE_PATH = (
+    "cv-corpus-16.1-2023-12-06-en/cv-corpus-16.1-2023-12-06/en/validated.tsv"
+)
+
+
+OUTPUT_FILE_PATH = (
+    "cv-corpus-16.1-2023-12-06-en/cv-corpus-16.1-2023-12-06/en/close_pairs.csv"
+)
 
 
 def find_close_phrase_pairs(phrases, max_distance):
@@ -21,23 +34,22 @@ def find_close_phrase_pairs(phrases, max_distance):
     return close_pairs
 
 
-### load cv-valid-dev.csv
 # Load the dataset
-import pandas as pd
-
-# Load the dataset
-df = pd.read_csv("cv-valid-dev/cv-valid-dev.csv")
-print(df["text"].head())
-
+df = pd.read_csv(
+    INPUT_FILE_PATH,
+    delimiter=DELIMITER,
+)
+print(df.head())
+print(df.columns)
 # Example usage
-phrases = df["text"].tolist()
+phrases = df[PHRASE_COLUMN].tolist()
 max_distance = 3  # Define 'short distance'
 close_pairs = find_close_phrase_pairs(phrases, max_distance)
 
 # save the close_pairs to csv
 import csv
 
-with open("cv-valid-dev/close_pairs.csv", "w") as f:
+with open(OUTPUT_FILE_PATH, "w") as f:
     writer = csv.writer(f)
     writer.writerow(["id", "phrase1", "phrase2", "distance"])
     for pair in close_pairs:
