@@ -17,13 +17,13 @@ from util import (
     vad_waveform,
     audio_mfcc_transform,
     resample_audio,
+    normalize_waveform,
 )
 
 
 def audio_distance(
     audio_file1, audio_file2, id=0, now=datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
 ):
-
     generated_audio_dir = f"generated_audio/{now}"
     os.makedirs(f"{generated_audio_dir}", exist_ok=True)
 
@@ -32,6 +32,9 @@ def audio_distance(
 
     waveforms_dir = f"waveforms/{now}"
     os.makedirs(f"{waveforms_dir}", exist_ok=True)
+
+    generated_mfcc_dir = f"generated_mfcc/{now}"
+    os.makedirs(f"{generated_mfcc_dir}", exist_ok=True)
 
     # Load audio files
     audio1, sr1 = load_audio_file(audio_file1)
@@ -45,6 +48,10 @@ def audio_distance(
     # print_waveform(audio2, sr2, "Waveform 2", f"waveforms/waveform2 {now}.png")
     audio1 = vad_waveform(audio1[0], sr1)
     audio2 = vad_waveform(audio2[0], sr2)
+
+    # normalize audio
+    audio1 = normalize_waveform(audio1)
+    audio2 = normalize_waveform(audio2)
 
     print_waveform(
         audio1, sr1, "VAD Waveform 1", f"{waveforms_dir}/{id}-vad_waveform1-{now}.png"
@@ -66,8 +73,12 @@ def audio_distance(
     #     f"Padded VAD Waveform {audio_file2}",
     #     f"{waveforms_dir}/{id}-padded_vad_waveform2-{now}.png",
     # )
-    # mfcc1 = audio_mfcc_transform(audio1, sr1, n_mels=80)
-    # mfcc2 = audio_mfcc_transform(audio2, sr2, n_mels=80)
+
+    mfcc1 = audio_mfcc_transform(audio1, sr1, n_mels=80)
+    mfcc2 = audio_mfcc_transform(audio2, sr2, n_mels=80)
+    # save mfcc to file
+    np.save(f"{generated_mfcc_dir}/{id}-mfcc1-{now}.npy", mfcc1)
+    np.save(f"{generated_mfcc_dir}/{id}-mfcc2-{now}.npy", mfcc2)
 
     # print(f"MFCC 1 {audio_file1}", mfcc1)
     # print(f"MFCC 2 {audio_file2}", mfcc2)
@@ -100,7 +111,8 @@ def audio_distance(
 
     # Compute distance
     audio_distance = compute_euclidean_distances(audio1, audio2)
-
+    mfcc_distance = audio_mfcc_transform(audio_distance, sr1, n_mels=80)
+    np.save(f"{generated_mfcc_dir}/{id}-mfcc-euc_distance-{now}.npy", mfcc_distance)
     # print_waveform(
     #     audio_distance,
     #     sr1,
@@ -111,7 +123,7 @@ def audio_distance(
     save_wav(audio_distance, sr1, output_file)
 
     print(f"Distance computed and saved to {output_file}")
-    return output_file
+    return output_file, mfcc_distance
 
 
 def main():

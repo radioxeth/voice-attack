@@ -58,6 +58,15 @@ def audio_mfcc_transform(audio, sr, n_mfcc=13, n_fft=2048, hop_length=512, n_mel
     return mfcc
 
 
+def normalize_waveform(audio):
+    # find max and normalize audio to 1
+    audio_max = np.abs(audio).max()
+
+    # normalize audio
+    audio = audio / audio_max
+    return audio
+
+
 ### function to vad the waveform
 def vad_waveform(audio, sr):
     # detect voice activity
