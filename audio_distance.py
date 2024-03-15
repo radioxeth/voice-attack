@@ -1,9 +1,6 @@
 import os
 import argparse
 import numpy as np
-import torchaudio
-import librosa
-import torch
 from datetime import datetime
 from util import (
     load_audio_file,
@@ -36,6 +33,9 @@ def audio_distance(
     generated_mfcc_dir = f"generated_mfcc/{now}"
     os.makedirs(f"{generated_mfcc_dir}", exist_ok=True)
 
+    masked_audio_dir = f"masked_audio/{now}"
+    os.makedirs(f"{masked_audio_dir}", exist_ok=True)
+
     # Load audio files
     audio1, sr1 = load_audio_file(audio_file1)
     audio2, sr2 = load_audio_file(audio_file2)
@@ -43,6 +43,11 @@ def audio_distance(
     # Resample audio files
     audio1, sr1 = resample_audio(audio1, sr1, 16000)
     audio2, sr2 = resample_audio(audio2, sr2, 16000)
+
+    print(len(audio1), len(audio2))
+    # pad audio files to be 2 seconds long
+    # audio1 = np.pad(audio1, (0, 32000 - len(audio1)), "constant")
+    # audio2 = np.pad(audio2, (0, 32000 - len(audio2)), "constant")
 
     # print_waveform(audio1, sr1, "Waveform 1", f"waveforms/waveform1 {now}.png")
     # print_waveform(audio2, sr2, "Waveform 2", f"waveforms/waveform2 {now}.png")
@@ -84,8 +89,8 @@ def audio_distance(
     # print(f"MFCC 2 {audio_file2}", mfcc2)
 
     # Compute spectrograms
-    spectrogram1 = compute_mel_spectrogram(audio1, sr1, n_mels=40)
-    spectrogram2 = compute_mel_spectrogram(audio2, sr2, n_mels=40)
+    spectrogram1 = compute_mel_spectrogram(audio1, sr1, n_mels=13)
+    spectrogram2 = compute_mel_spectrogram(audio2, sr2, n_mels=13)
     print_figure(
         f"{generated_images_dir}/{id}-spectrogram1-{now}.png",
         f"{audio_file1} mel spectrogram",
@@ -111,7 +116,17 @@ def audio_distance(
 
     # Compute distance
     audio_distance = compute_euclidean_distances(audio1, audio2)
-    mfcc_distance = audio_mfcc_transform(audio_distance, sr1, n_mels=80)
+
+    ### if the distance is less than 0.1, mask the original audio using the audio distance
+    mask = np.where(audio_distance < 0.5, 1, 0)
+
+    audio1_masked = audio1 * mask
+    audio2_masked = audio2 * mask
+
+    save_wav(audio1_masked, sr1, f"{masked_audio_dir}/{id}-masked1-{now}.wav")
+    save_wav(audio2_masked, sr2, f"{masked_audio_dir}/{id}-masked2-{now}.wav")
+
+    mfcc_distance = audio_mfcc_transform(audio_distance, sr1, n_mels=13)
     np.save(f"{generated_mfcc_dir}/{id}-mfcc-euc_distance-{now}.npy", mfcc_distance)
     # print_waveform(
     #     audio_distance,

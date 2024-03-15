@@ -5,6 +5,97 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
+texts = [
+    "For all intensive purposes.",
+    "For all intents and purposes.",
+    "Nip it in the butt.",
+    "Nip it in the bud.",
+    "Self-depreciating.",
+    "Self-deprecating.",
+    "Escape goat.",
+    "Scapegoat.",
+    "Mute point.",
+    "Moot point.",
+    "Old-timer's disease.",
+    "Alzheimer's disease.",
+    "Doggy-dog world.",
+    "Dog-eat-dog world.",
+    "Lack toast and tolerant.",
+    "Lactose intolerant.",
+    "Bowl in a china shop.",
+    "Bull in a china shop.",
+    "Deep-seeded.",
+    "Deep-seated.",
+    "Taken for granite.",
+    "Taken for granted.",
+    "Case and point.",
+    "Case in point.",
+    "An escape goat.",
+    "A scapegoat.",
+    "Pass mustard.",
+    "Pass muster.",
+    "On tender hooks.",
+    "On tenterhooks.",
+    "Tongue and cheek.",
+    "Tongue in cheek.",
+    "Card shark.",
+    "Card sharp.",
+    "Damp squid.",
+    "Damp squib.",
+    "Curl up in the feeble position.",
+    "Curl up in the fetal position.",
+    "A hard road to hoe.",
+    "A hard row to hoe.",
+    "Ex-patriot.",
+    "Expatriate.",
+    "Biting my time.",
+    "Biding my time.",
+    "Antidotal evidence.",
+    "Anecdotal evidence.",
+    "Circus-sized.",
+    "Circumcised.",
+    "Hunger pains.",
+    "Hunger pangs.",
+    "Flush out the details.",
+    "Flesh out the details.",
+    "He's a wolf in cheap clothing.",
+    "He's a wolf in sheep's clothing.",
+    "Pre-Madonna.",
+    "Prima donna.",
+    "Social leper.",
+    "Social pariah.",
+    "Give free rein.",
+    "Give free reign.",
+    "Make ends meat.",
+    "Make ends meet.",
+    "Right from the gecko.",
+    "Right from the get-go.",
+    "Stock home syndrome.",
+    "Stockholm syndrome.",
+    "Chester drawers.",
+    "Chest of drawers.",
+    "Beckon call.",
+    "Beck and call.",
+    "Full-proof.",
+    "Foolproof.",
+    "Two peas in a pot.",
+    "Two peas in a pod.",
+    "On the spurt of the moment.",
+    "On the spur of the moment.",
+    "Mind-bottling.",
+    "Mind-boggling.",
+    "I plead the Fifth Commandment.",
+    "I plead the Fifth Amendment.",
+]
+
+paired_texts = [
+    {"id": i + 1, "pair_id": (i // 2) + 1, "text": texts[i]} for i in range(len(texts))
+]
+
+
+CLASS_RECORDED = 1
+CLASS_TTS = -1
+
 
 def load_audio_file(file_path):
     y, sr = torchaudio.load(file_path)
@@ -18,11 +109,6 @@ def resample_audio(audio, sr, new_sr):
 
 
 def compute_mel_spectrogram(audio, sr, n_fft=2048, hop_length=512, n_mels=80):
-    # Function to compute a spectrogram from an audio signal
-    # transform = torchaudio.transforms.MelSpectrogram(
-    #     sample_rate=sr, n_fft=n_fft, hop_length=hop_length
-    # )
-    # log_S = transform(audio)
     audio = audio.cpu()  # Move tensor to CPU if it's not already
     audio = audio.numpy()  # Convert to NumPy array
     S = librosa.feature.melspectrogram(
@@ -82,19 +168,37 @@ def vad_waveform(audio, sr):
 
 
 ### function to center and pad the waveform
-def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
-    audio1 = audio1.cpu()  # Move tensor to CPU if it's not already
-    audio1 = audio1.numpy()  # Convert to NumPy array
+import numpy as np
+import librosa
+import torch
 
-    audio2 = audio2.cpu()  # Move tensor to CPU if it's not already
-    audio2 = audio2.numpy()  # Convert to NumPy array
+
+def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
+    # Assuming audio1 and audio2 are PyTorch tensors
+    audio1 = audio1.cpu().numpy()  # Convert to NumPy array
+    audio2 = audio2.cpu().numpy()  # Convert to NumPy array
+
     # Detect the onsets
     onset_frames1 = librosa.onset.onset_detect(y=audio1, sr=sr1)
     onset_frames2 = librosa.onset.onset_detect(y=audio2, sr=sr2)
 
-    # Convert frames to sample indices
-    onset_samples1 = librosa.frames_to_samples(onset_frames1)[0]
-    onset_samples2 = librosa.frames_to_samples(onset_frames2)[0]
+    # Convert frames to sample indices, safely handle empty cases
+    onset_samples1 = (
+        librosa.frames_to_samples(onset_frames1)[0] if onset_frames1.size > 0 else 0
+    )
+    onset_samples2 = (
+        librosa.frames_to_samples(onset_frames2)[0] if onset_frames2.size > 0 else 0
+    )
+
+    if onset_frames1.size > 0:
+        onset_samples1 = librosa.frames_to_samples(onset_frames1)[0]
+    else:
+        onset_samples1 = 0  # Fallback value if no onsets are detected
+
+    if onset_frames2.size > 0:
+        onset_samples2 = librosa.frames_to_samples(onset_frames2)[0]
+    else:
+        onset_samples2 = 0  # Fallback value if no onsets are detected
 
     # Determine the maximum onset sample index to use as a reference point for alignment
     max_onset = max(onset_samples1, onset_samples2)
@@ -108,9 +212,42 @@ def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
     audio1_padded = librosa.util.fix_length(audio1_padded, size=max_length)
     audio2_padded = librosa.util.fix_length(audio2_padded, size=max_length)
 
+    # Convert back to tensors
     audio1 = torch.from_numpy(audio1_padded)
     audio2 = torch.from_numpy(audio2_padded)
+
     return audio1, audio2
+
+
+# def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
+#     audio1 = audio1.cpu()  # Move tensor to CPU if it's not already
+#     audio1 = audio1.numpy()  # Convert to NumPy array
+
+#     audio2 = audio2.cpu()  # Move tensor to CPU if it's not already
+#     audio2 = audio2.numpy()  # Convert to NumPy array
+#     # Detect the onsets
+#     onset_frames1 = librosa.onset.onset_detect(y=audio1, sr=sr1)
+#     onset_frames2 = librosa.onset.onset_detect(y=audio2, sr=sr2)
+
+#     # Convert frames to sample indices
+#     onset_samples1 = librosa.frames_to_samples(onset_frames1)[0]
+#     onset_samples2 = librosa.frames_to_samples(onset_frames2)[0]
+
+#     # Determine the maximum onset sample index to use as a reference point for alignment
+#     max_onset = max(onset_samples1, onset_samples2)
+
+#     # Pad the beginning of each audio signal with zeros to align the onsets
+#     audio1_padded = np.pad(audio1, (max_onset - onset_samples1, 0), mode="constant")
+#     audio2_padded = np.pad(audio2, (max_onset - onset_samples2, 0), mode="constant")
+
+#     # Trim or extend both signals to the same length
+#     max_length = max(len(audio1_padded), len(audio2_padded))
+#     audio1_padded = librosa.util.fix_length(audio1_padded, size=max_length)
+#     audio2_padded = librosa.util.fix_length(audio2_padded, size=max_length)
+
+#     audio1 = torch.from_numpy(audio1_padded)
+#     audio2 = torch.from_numpy(audio2_padded)
+#     return audio1, audio2
 
 
 def print_waveform(
@@ -145,6 +282,7 @@ def print_waveform(
     fig.subplots_adjust(left=left_margin, right=right_margin)
     plt.tight_layout()
     plt.savefig(file_name)
+    plt.close()
 
 
 ### Define a function to print the figure
@@ -160,6 +298,7 @@ def print_figure(audio_path, figure_title, log_spectrogram, sr):
 
     plt.tight_layout()
     plt.savefig(audio_path)
+    plt.close()
 
 
 # Define a function to print the Euclidean distance figure
@@ -207,3 +346,22 @@ def clean_text(text, clean=True, strip=False, lower=False):
     if lower:
         text = text.lower()
     return text
+
+
+def mfccs_class_ids_from_files(directory_path, files, mfccs, class_ids, class_id):
+    for file in files:
+        mfcc = np.load(f"{directory_path}/{file}")
+        mfccs.append(mfcc)
+        class_ids.append(class_id)
+    return mfccs, class_ids
+
+
+def shuffle_and_split(files, split_ratio=0.8):
+    # select from recorded_files into two random sets, one for training and one for inference
+    np.random.shuffle(files)
+
+    # split recorded_files into two arrays
+    files_train = files[: int(split_ratio * len(files))]
+    files_test = files[int((split_ratio) * len(files)) :]
+    print(f"Train: {len(files_train)} Test: {len(files_test)}")
+    return files_train, files_test
