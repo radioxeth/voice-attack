@@ -8,7 +8,7 @@ from scipy.spatial import distance
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
-
+import joblib
 
 # imputer = SimpleImputer(strategy="mean")
 
@@ -19,10 +19,6 @@ from util import (
     mfccs_class_ids_from_files,
     shuffle_and_split,
 )
-
-# load mfccs
-# model = GaussianNB()
-# mfccs = np.load("mfccs.npy")
 
 
 def pad_mfccs(mfccs):
@@ -41,18 +37,6 @@ def pad_mfccs(mfccs):
     return mfccs_padded
 
 
-# def pca_mfccs(mfccs):
-#     mfccs = np.array(mfccs)
-#     mfccs = mfccs.reshape(mfccs.shape[0], -1)
-#     print(np.shape(mfccs))
-
-#     scaler = StandardScaler()
-#     X_train = scaler.fit_transform(mfccs)
-#     pca = PCA(n_components=40)
-#     X_pca = pca.fit_transform(X_train)
-#     return X_pca
-
-
 def pca_mfccs(mfccs):
     mfccs = np.array(mfccs)
     mfccs = mfccs.reshape(mfccs.shape[0], -1)
@@ -62,15 +46,18 @@ def pca_mfccs(mfccs):
     mfccs_imputed = imputer.fit_transform(mfccs)
 
     # Standardization
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(mfccs_imputed)
+    # scaler = StandardScaler(with_mean=False)
+    # X_train = scaler.fit_transform(mfccs_imputed)
 
-    pca = PCA(n_components=40)
-    X_pca = pca.fit_transform(X_train)
+    pca = PCA(n_components=13)
+    X_pca = pca.fit_transform(mfccs_imputed)
+
     return X_pca
 
 
-def naive_bayes(recorded_directory_path, generated_directory_path):
+def naive_bayes(
+    recorded_directory_path, generated_directory_path, n_mfcc, round, output_dir
+):
     # open .npy files and get the mfcc
     mfccs_train = []
     class_ids_train = []
@@ -95,9 +82,9 @@ def naive_bayes(recorded_directory_path, generated_directory_path):
     ]
 
     # shuffle and split the files
-    recorded_files_train, recorded_files_test = shuffle_and_split(recorded_files, 0.9)
+    recorded_files_train, recorded_files_test = shuffle_and_split(recorded_files, 0.8)
     generated_files_train, generated_files_test = shuffle_and_split(
-        generated_files, 0.9
+        generated_files, 0.8
     )
 
     # open .npy files and get the mfcc
@@ -143,26 +130,24 @@ def naive_bayes(recorded_directory_path, generated_directory_path):
     # # train the model
     model = GaussianNB()
     model.fit(mfccs_train, class_ids_train)
-
+    joblib.dump(
+        model, f"{output_dir}/naive_bayes_model_mfcc{n_mfcc}_round{round}.joblib"
+    )
     # # test the model
     class_ids_pred = model.predict(mfccs_test)
-
     # # compute the accuracy
-    accuracy = accuracy_score(class_ids_test, class_ids_pred)
+    accuracy = accuracy_score(class_ids_test, class_ids_pred, normalize=True)
     print(f"Accuracy: {accuracy}")
 
     # compute the confusion matrix
     cm = confusion_matrix(class_ids_test, class_ids_pred)
 
-    # print the confusion matrix pretty
+    # print a labeled table of the confusion matrix
     print("Confusion Matrix")
-    print(cm)
-
-    # compute the centers
-    # centers = np.array(
-    #     [np.mean(mfccs_train[class_ids_train == i], axis=0) for i in range(2)]
-    # )
-    # return centers, mfccs_train, class_ids_train, mfccs_test, class_ids_test
+    print("Predicted", "Recorded", "Generated")
+    print("Actual")
+    print("Recorded", cm[0][0], cm[0][1])
+    print("Generated", cm[1][0], cm[1][1])
 
 
 def main():
@@ -179,8 +164,21 @@ def main():
         type=str,
         help="The directory path to the generated audio files",
     )
+    parser.add_argument(
+        "n_mfcc", type=int, help="Number of mfcc features to extract", default=13
+    )
+    parser.add_argument("round", type=int, help="round of the model run", default=0)
+    parser.add_argument(
+        "output_dir", type=str, help="output directory", default="naive_bayes"
+    )
     args = parser.parse_args()
-    naive_bayes(args.recorded_directory_path, args.generated_directory_path)
+    naive_bayes(
+        args.recorded_directory_path,
+        args.generated_directory_path,
+        n_mfcc=args.n_mfcc,
+        round=args.round,
+        output_dir=args.output_dir,
+    )
     results = []
 
 

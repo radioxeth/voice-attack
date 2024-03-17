@@ -4,6 +4,8 @@ import torchaudio
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+from pydub import AudioSegment
+
 
 texts = [
     "For all intensive purposes.",
@@ -88,6 +90,7 @@ texts = [
     "I plead the Fifth Amendment.",
 ]
 
+
 paired_texts = [
     {"id": i + 1, "pair_id": (i // 2) + 1, "text": texts[i]} for i in range(len(texts))
 ]
@@ -106,6 +109,17 @@ def resample_audio(audio, sr, new_sr):
     resampler = torchaudio.transforms.Resample(sr, new_sr)
     audio_resampled = resampler(audio)
     return audio_resampled, new_sr
+
+
+def find_max_loudness(wav_files):
+    loudness = []
+    for file in wav_files:
+
+        audio = load_audio_file(file)
+
+        max_loudness = np.max(audio[0].cpu().numpy().flatten())
+        loudness.append(max_loudness)
+    return np.max(loudness)
 
 
 def compute_mel_spectrogram(audio, sr, n_fft=2048, hop_length=512, n_mels=80):
@@ -136,17 +150,24 @@ def compute_euclidean_distances(log_spectrogram1, log_spectrogram2):
     return euclidean_distances
 
 
-def audio_mfcc_transform(audio, sr, n_mfcc=13, n_fft=2048, hop_length=512, n_mels=23):
+def audio_mfcc_transform(audio, sr, n_mfcc=13, n_fft=2048, hop_length=512):
     mfcc_transform = torchaudio.transforms.MFCC(
-        n_mfcc=n_mfcc, sample_rate=sr, log_mels=True
+        n_mfcc=n_mfcc,
+        sample_rate=sr,
+        log_mels=True,
+        melkwargs={"n_fft": n_fft, "hop_length": hop_length},
     )
-    mfcc = mfcc_transform(audio)
+    padded_audio = pad_audio_if_needed(audio, 2048)
+    mfcc = mfcc_transform(padded_audio)
     return mfcc
 
 
-def normalize_waveform(audio):
+def normalize_waveform(audio, max_loudness=None):
     # find max and normalize audio to 1
-    audio_max = np.abs(audio).max()
+    if max_loudness is None:
+        audio_max = np.abs(audio).max()
+    else:
+        audio_max = max_loudness
 
     # normalize audio
     audio = audio / audio_max
@@ -156,21 +177,22 @@ def normalize_waveform(audio):
 ### function to vad the waveform
 def vad_waveform(audio, sr):
     # detect voice activity
-    audio = torchaudio.functional.vad(
-        audio,
-        sr,
-        trigger_time=0.55,
-        trigger_level=7,
-        noise_reduction_amount=1.65,
-        search_time=0.55,
-    )
+    audio = torchaudio.functional.vad(audio, sr)
     return audio
 
 
-### function to center and pad the waveform
-import numpy as np
-import librosa
-import torch
+def pad_audio_if_needed(audio, pad_length):
+    """Ensure audio is at least pad_length long by padding with zeros if needed."""
+    current_length = audio.shape[-1]
+    if current_length < pad_length:
+        # Calculate total padding required
+        total_pad = pad_length - current_length
+        # Pad evenly on both sides
+        pad_left = total_pad // 2
+        pad_right = total_pad - pad_left
+        # Apply padding
+        audio = torch.nn.functional.pad(audio, (pad_left, pad_right))
+    return audio
 
 
 def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
@@ -217,37 +239,6 @@ def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
     audio2 = torch.from_numpy(audio2_padded)
 
     return audio1, audio2
-
-
-# def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
-#     audio1 = audio1.cpu()  # Move tensor to CPU if it's not already
-#     audio1 = audio1.numpy()  # Convert to NumPy array
-
-#     audio2 = audio2.cpu()  # Move tensor to CPU if it's not already
-#     audio2 = audio2.numpy()  # Convert to NumPy array
-#     # Detect the onsets
-#     onset_frames1 = librosa.onset.onset_detect(y=audio1, sr=sr1)
-#     onset_frames2 = librosa.onset.onset_detect(y=audio2, sr=sr2)
-
-#     # Convert frames to sample indices
-#     onset_samples1 = librosa.frames_to_samples(onset_frames1)[0]
-#     onset_samples2 = librosa.frames_to_samples(onset_frames2)[0]
-
-#     # Determine the maximum onset sample index to use as a reference point for alignment
-#     max_onset = max(onset_samples1, onset_samples2)
-
-#     # Pad the beginning of each audio signal with zeros to align the onsets
-#     audio1_padded = np.pad(audio1, (max_onset - onset_samples1, 0), mode="constant")
-#     audio2_padded = np.pad(audio2, (max_onset - onset_samples2, 0), mode="constant")
-
-#     # Trim or extend both signals to the same length
-#     max_length = max(len(audio1_padded), len(audio2_padded))
-#     audio1_padded = librosa.util.fix_length(audio1_padded, size=max_length)
-#     audio2_padded = librosa.util.fix_length(audio2_padded, size=max_length)
-
-#     audio1 = torch.from_numpy(audio1_padded)
-#     audio2 = torch.from_numpy(audio2_padded)
-#     return audio1, audio2
 
 
 def print_waveform(
@@ -350,9 +341,11 @@ def clean_text(text, clean=True, strip=False, lower=False):
 
 def mfccs_class_ids_from_files(directory_path, files, mfccs, class_ids, class_id):
     for file in files:
-        mfcc = np.load(f"{directory_path}/{file}")
-        mfccs.append(mfcc)
-        class_ids.append(class_id)
+        if file.endswith(".npy"):
+            # print(f"{directory_path}/{file}")
+            mfcc = np.load(f"{directory_path}/{file}")
+            mfccs.append(mfcc)
+            class_ids.append(class_id)
     return mfccs, class_ids
 
 
@@ -363,5 +356,5 @@ def shuffle_and_split(files, split_ratio=0.8):
     # split recorded_files into two arrays
     files_train = files[: int(split_ratio * len(files))]
     files_test = files[int((split_ratio) * len(files)) :]
-    print(f"Train: {len(files_train)} Test: {len(files_test)}")
+    # print(f"Train: {len(files_train)} Test: {len(files_test)}")
     return files_train, files_test
