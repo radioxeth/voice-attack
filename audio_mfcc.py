@@ -74,7 +74,7 @@ def audio_mfcc(
         spectrogram1 = compute_mel_spectrogram(audio1, sr1, n_mels=n_mels)
         print_figure(
             f"{images_dir}/{id}-mel-spectrogram.png",
-            f"Mel Spectrogram ({class_type})\n{audio_file1}",
+            f"Mel Spectrogram ({class_type}, {n_mels})\n{audio_file1}",
             spectrogram1,
             sr1,
         )
@@ -84,7 +84,7 @@ def audio_mfcc(
     if print_figures == 1:
         print_figure(
             f"{images_dir}/{id}-mfcc.png",
-            f"MFCC ({class_type})\n{audio_file1}",
+            f"MFCCs ({class_type}, {n_mels})\n{audio_file1}",
             audio_mfcc.cpu().numpy(),
             sr1,
         )

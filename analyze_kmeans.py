@@ -11,7 +11,8 @@ FILENAME = "kmeans_final/results_accuracy.csv"
 df = pd.read_csv(FILENAME)
 print(df.head())
 
-
+#### output directory
+OUTPUT_DIR = "kmeans_final"
 # for each n_mfcc find the mean of each accuracy metric
 # and the standard deviation of each accuracy metric
 n_mfccs = df["n_mfcc"].unique()
@@ -24,14 +25,10 @@ for n_mfcc in n_mfccs:
     means.append(
         [
             n_mfcc,
-            # df_n_mfcc["true_positives"].mean(),
-            # df_n_mfcc["true_positives"].std(),
-            # df_n_mfcc["true_negatives"].mean(),
-            # df_n_mfcc["true_negatives"].std(),
-            # df_n_mfcc["false_positives"].mean(),
-            # df_n_mfcc["false_positives"].std(),
-            # df_n_mfcc["false_negatives"].mean(),
-            # df_n_mfcc["false_negatives"].std(),
+            df_n_mfcc["true_positives"].sum(),
+            df_n_mfcc["true_negatives"].sum(),
+            df_n_mfcc["false_positives"].sum(),
+            df_n_mfcc["false_negatives"].sum(),
             df_n_mfcc["accuracy"].mean().round(4),
             df_n_mfcc["accuracy"].std().round(4),
             df_n_mfcc["precision"].mean().round(4),
@@ -45,19 +42,33 @@ for n_mfcc in n_mfccs:
         ]
     )
 
+# scatter plot of mfcc vs accuracy
+plt.figure()
+for n_mfcc in n_mfccs:
+    df_n_mfcc = df[df["n_mfcc"] == n_mfcc]
+    plt.scatter(df_n_mfcc["n_mfcc"], df_n_mfcc["accuracy"], label=f"{n_mfcc} MFCCs")
+# set yaxis from 0 to 1
+plt.ylim(0, 1)
+plt.xlim(0, 41)
+plt.xlabel("Number of MFCCs")
+plt.ylabel("Accuracy")
+plt.title("Accuracy vs Number of MFCCs\nK-means")
+# add legend with small font
+# plt.legend()
+
+plt.tight_layout()
+plt.savefig(f"{OUTPUT_DIR}/accuracy_vs_mfcc.png")
+plt.close()
+
 # plot the mean accuracy metrics for each n_mfcc
 df_means = pd.DataFrame(
     means,
     columns=[
         "n_mfcc",
-        # "true_positives_mean",
-        # "true_positives_std",
-        # "true_negatives_mean",
-        # "true_negatives_std",
-        # "false_positives_mean",
-        # "false_positives_std",
-        # "false_negatives_mean",
-        # "false_negatives_std",
+        "true_positives",
+        "true_negatives",
+        "false_positives",
+        "false_negatives",
         "accuracy_mean",
         "accuracy_std",
         "precision_mean",
@@ -80,10 +91,59 @@ ax.errorbar(
     df_means["accuracy_mean"],
     yerr=df_means["accuracy_std"],
     fmt="o",
+    label="Accuracy",
 )
-ax.set_xlabel("n_mfcc")
-ax.set_ylabel("accuracy")
-plt.savefig("kmeans_final/accuracy_vs_n_mfcc.png")
+ax.set_xlabel("Number of MFCCs")
+ax.set_ylabel("Accuracy")
+ax.set_title("Mean Accuracy vs Number of MFCCs\nK-means")
+ax.set_ylim(0, 1)
+ax.set_xlim(0, 41)
+plt.legend(loc="lower right")
+plt.tight_layout()
+
+plt.savefig(f"{OUTPUT_DIR}/mean_accuracy_vs_n_mfcc.png")
+plt.close()
+
+
+# plot the mean accuracy metrics for each n_mfcc ALL
+fig, ax = plt.subplots()
+ax.errorbar(
+    df_means["n_mfcc"],
+    df_means["accuracy_mean"],
+    yerr=df_means["accuracy_std"],
+    fmt="o",
+    label="Accuracy",
+)
+ax.errorbar(
+    df_means["n_mfcc"],
+    df_means["precision_mean"],
+    yerr=df_means["precision_std"],
+    fmt="x",
+    label="Precision",
+)
+ax.errorbar(
+    df_means["n_mfcc"],
+    df_means["recall_mean"],
+    yerr=df_means["recall_std"],
+    fmt="v",
+    label="Recall",
+)
+ax.errorbar(
+    df_means["n_mfcc"],
+    df_means["specificity_mean"],
+    yerr=df_means["specificity_std"],
+    fmt="d",
+    label="Specificity",
+)
+ax.set_xlabel("Number of MFCCs")
+ax.set_ylabel("Performance Metric Value")
+ax.set_title("Performance Metrics vs Number of MFCCs\nK-means")
+ax.set_ylim(0, 1)
+ax.set_xlim(0, 41)
+plt.legend(loc="lower right")
+plt.tight_layout()
+
+plt.savefig(f"{OUTPUT_DIR}/mean_accuracy_vs_n_mfcc_all.png")
 plt.close()
 
 
@@ -110,16 +170,23 @@ for n_mfcc in n_mfccs:
 # Configure the plot with common settings
 ax.set_xlabel("False Positive Rate")
 ax.set_ylabel("True Positive Rate")
-ax.set_title("Receiver Operating Characteristic")
+ax.set_title("Receiver Operating Characteristic\nK-means")
 # ax.legend(loc="lower right", fontsize="small")
 
 # Save the figure with all ROC curves
 plt.savefig("kmeans_final/roc_curve_all_mfcc.png")
+plt.tight_layout()
 plt.close()
 
 
+max_mean_accuracy = np.max(df_means["accuracy_mean"])
 print(np.max(df["accuracy"]))
 print(df[df["accuracy"] == np.max(df["accuracy"])])
 
 print(np.max(df_means["accuracy_mean"]))
 print(df_means[df_means["accuracy_mean"] == np.max(df_means["accuracy_mean"])])
+
+max_mean_accuracy_std = df_means[df_means["accuracy_mean"] == max_mean_accuracy][
+    "accuracy_std"
+].values[0]
+print("mean accuracy std", max_mean_accuracy_std)

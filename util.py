@@ -358,3 +358,52 @@ def shuffle_and_split(files, split_ratio=0.8):
     files_test = files[int((split_ratio) * len(files)) :]
     # print(f"Train: {len(files_train)} Test: {len(files_test)}")
     return files_train, files_test
+
+
+def get_accuracy_stats(
+    true_positives, true_negatives, false_positives, false_negatives
+):
+    # calculate accuracy
+    accuracy = (true_positives + true_negatives) / (
+        true_positives + false_positives + false_negatives + true_negatives
+    )
+
+    # calculate precision
+    precision = true_positives / (true_positives + false_positives)
+
+    # calculate recall
+    recall = true_positives / (true_positives + false_negatives)
+
+    # calculate specificity
+    specificity = true_negatives / (true_negatives + false_positives)
+
+    # calculate F1 score
+    f1_score = 2 * (precision * recall) / (precision + recall)
+
+    return accuracy, precision, recall, specificity, f1_score
+
+
+def get_confusion_stats(df):
+    true_positives = len(
+        df[
+            (df["test_class"] == CLASS_RECORDED)
+            & (df["predicted_class"] == CLASS_RECORDED)
+        ]
+    )
+
+    # calculate true negatives
+    true_negatives = len(
+        df[(df["test_class"] == CLASS_TTS) & (df["predicted_class"] == CLASS_TTS)]
+    )
+
+    # calculate false positives
+    false_positives = len(
+        df[(df["test_class"] == CLASS_TTS) & (df["predicted_class"] == CLASS_RECORDED)]
+    )
+
+    # calculate false negatives
+    false_negatives = len(
+        df[(df["test_class"] == CLASS_RECORDED) & (df["predicted_class"] == CLASS_TTS)]
+    )
+
+    return true_positives, true_negatives, false_positives, false_negatives
