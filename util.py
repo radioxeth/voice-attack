@@ -4,18 +4,130 @@ import torchaudio
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+from pydub import AudioSegment
+
+
+texts = [
+    "For all intensive purposes.",
+    "For all intents and purposes.",
+    "Nip it in the butt.",
+    "Nip it in the bud.",
+    "Self-depreciating.",
+    "Self-deprecating.",
+    "Escape goat.",
+    "Scapegoat.",
+    "Mute point.",
+    "Moot point.",
+    "Old-timer's disease.",
+    "Alzheimer's disease.",
+    "Doggy-dog world.",
+    "Dog-eat-dog world.",
+    "Lack toast and tolerant.",
+    "Lactose intolerant.",
+    "Bowl in a china shop.",
+    "Bull in a china shop.",
+    "Deep-seeded.",
+    "Deep-seated.",
+    "Taken for granite.",
+    "Taken for granted.",
+    "Case and point.",
+    "Case in point.",
+    "An escape goat.",
+    "A scapegoat.",
+    "Pass mustard.",
+    "Pass muster.",
+    "On tender hooks.",
+    "On tenterhooks.",
+    "Tongue and cheek.",
+    "Tongue in cheek.",
+    "Card shark.",
+    "Card sharp.",
+    "Damp squid.",
+    "Damp squib.",
+    "Curl up in the feeble position.",
+    "Curl up in the fetal position.",
+    "A hard road to hoe.",
+    "A hard row to hoe.",
+    "Ex-patriot.",
+    "Expatriate.",
+    "Biting my time.",
+    "Biding my time.",
+    "Antidotal evidence.",
+    "Anecdotal evidence.",
+    "Circus-sized.",
+    "Circumcised.",
+    "Hunger pains.",
+    "Hunger pangs.",
+    "Flush out the details.",
+    "Flesh out the details.",
+    "He's a wolf in cheap clothing.",
+    "He's a wolf in sheep's clothing.",
+    "Pre-Madonna.",
+    "Prima donna.",
+    "Social leper.",
+    "Social pariah.",
+    "Give free rein.",
+    "Give free reign.",
+    "Make ends meat.",
+    "Make ends meet.",
+    "Right from the gecko.",
+    "Right from the get-go.",
+    "Stock home syndrome.",
+    "Stockholm syndrome.",
+    "Chester drawers.",
+    "Chest of drawers.",
+    "Beckon call.",
+    "Beck and call.",
+    "Full-proof.",
+    "Foolproof.",
+    "Two peas in a pot.",
+    "Two peas in a pod.",
+    "On the spurt of the moment.",
+    "On the spur of the moment.",
+    "Mind-bottling.",
+    "Mind-boggling.",
+    "I plead the Fifth Commandment.",
+    "I plead the Fifth Amendment.",
+]
+
+
+paired_texts = [
+    {"id": i + 1, "pair_id": (i // 2) + 1, "text": texts[i]} for i in range(len(texts))
+]
+
+
+CLASS_RECORDED = 1
+CLASS_TTS = -1
 
 
 def load_audio_file(file_path):
-    # Function to load an audio file
-    y, sr = librosa.load(file_path, mono=False)
-    print(sr)
+    y, sr = torchaudio.load(file_path)
     return y, sr
 
 
-def compute_spectrogram(audio, sr):
-    # Function to compute a spectrogram from an audio signal
-    S = librosa.feature.melspectrogram(y=audio, sr=sr)
+def resample_audio(audio, sr, new_sr):
+    resampler = torchaudio.transforms.Resample(sr, new_sr)
+    audio_resampled = resampler(audio)
+    return audio_resampled, new_sr
+
+
+def find_max_loudness(wav_files):
+    loudness = []
+    for file in wav_files:
+
+        audio = load_audio_file(file)
+
+        max_loudness = np.max(audio[0].cpu().numpy().flatten())
+        loudness.append(max_loudness)
+    return np.max(loudness)
+
+
+def compute_mel_spectrogram(audio, sr, n_fft=2048, hop_length=512, n_mels=80):
+    audio = audio.cpu()  # Move tensor to CPU if it's not already
+    audio = audio.numpy()  # Convert to NumPy array
+    S = librosa.feature.melspectrogram(
+        y=audio, sr=sr, n_fft=n_fft, hop_length=hop_length, n_mels=n_mels
+    )
     log_S = librosa.power_to_db(S=S, ref=np.max)
     return log_S
 
@@ -38,29 +150,95 @@ def compute_euclidean_distances(log_spectrogram1, log_spectrogram2):
     return euclidean_distances
 
 
-### function to center and pad the waveform
-def center_and_pad_waveforms(y1, sr1, y2, sr2):
-    # Detect the onsets
-    onset_frames1 = librosa.onset.onset_detect(y=y1, sr=sr1)
-    onset_frames2 = librosa.onset.onset_detect(y=y2, sr=sr2)
+def audio_mfcc_transform(audio, sr, n_mfcc=13, n_fft=2048, hop_length=512):
+    mfcc_transform = torchaudio.transforms.MFCC(
+        n_mfcc=n_mfcc,
+        sample_rate=sr,
+        log_mels=True,
+        melkwargs={"n_fft": n_fft, "hop_length": hop_length},
+    )
+    padded_audio = pad_audio_if_needed(audio, 2048)
+    mfcc = mfcc_transform(padded_audio)
+    return mfcc
 
-    # Convert frames to sample indices
-    onset_samples1 = librosa.frames_to_samples(onset_frames1)[0]
-    onset_samples2 = librosa.frames_to_samples(onset_frames2)[0]
+
+def normalize_waveform(audio, max_loudness=None):
+    # find max and normalize audio to 1
+    if max_loudness is None:
+        audio_max = np.abs(audio).max()
+    else:
+        audio_max = max_loudness
+
+    # normalize audio
+    audio = audio / audio_max
+    return audio
+
+
+### function to vad the waveform
+def vad_waveform(audio, sr):
+    # detect voice activity
+    audio = torchaudio.functional.vad(audio, sr)
+    return audio
+
+
+def pad_audio_if_needed(audio, pad_length):
+    """Ensure audio is at least pad_length long by padding with zeros if needed."""
+    current_length = audio.shape[-1]
+    if current_length < pad_length:
+        # Calculate total padding required
+        total_pad = pad_length - current_length
+        # Pad evenly on both sides
+        pad_left = total_pad // 2
+        pad_right = total_pad - pad_left
+        # Apply padding
+        audio = torch.nn.functional.pad(audio, (pad_left, pad_right))
+    return audio
+
+
+def center_and_pad_waveforms(audio1, sr1, audio2, sr2):
+    # Assuming audio1 and audio2 are PyTorch tensors
+    audio1 = audio1.cpu().numpy()  # Convert to NumPy array
+    audio2 = audio2.cpu().numpy()  # Convert to NumPy array
+
+    # Detect the onsets
+    onset_frames1 = librosa.onset.onset_detect(y=audio1, sr=sr1)
+    onset_frames2 = librosa.onset.onset_detect(y=audio2, sr=sr2)
+
+    # Convert frames to sample indices, safely handle empty cases
+    onset_samples1 = (
+        librosa.frames_to_samples(onset_frames1)[0] if onset_frames1.size > 0 else 0
+    )
+    onset_samples2 = (
+        librosa.frames_to_samples(onset_frames2)[0] if onset_frames2.size > 0 else 0
+    )
+
+    if onset_frames1.size > 0:
+        onset_samples1 = librosa.frames_to_samples(onset_frames1)[0]
+    else:
+        onset_samples1 = 0  # Fallback value if no onsets are detected
+
+    if onset_frames2.size > 0:
+        onset_samples2 = librosa.frames_to_samples(onset_frames2)[0]
+    else:
+        onset_samples2 = 0  # Fallback value if no onsets are detected
 
     # Determine the maximum onset sample index to use as a reference point for alignment
     max_onset = max(onset_samples1, onset_samples2)
 
     # Pad the beginning of each audio signal with zeros to align the onsets
-    y1_padded = np.pad(y1, (max_onset - onset_samples1, 0), mode="constant")
-    y2_padded = np.pad(y2, (max_onset - onset_samples2, 0), mode="constant")
+    audio1_padded = np.pad(audio1, (max_onset - onset_samples1, 0), mode="constant")
+    audio2_padded = np.pad(audio2, (max_onset - onset_samples2, 0), mode="constant")
 
     # Trim or extend both signals to the same length
-    max_length = max(len(y1_padded), len(y2_padded))
-    y1_padded = librosa.util.fix_length(y1_padded, size=max_length)
-    y2_padded = librosa.util.fix_length(y2_padded, size=max_length)
+    max_length = max(len(audio1_padded), len(audio2_padded))
+    audio1_padded = librosa.util.fix_length(audio1_padded, size=max_length)
+    audio2_padded = librosa.util.fix_length(audio2_padded, size=max_length)
 
-    return y1_padded, y2_padded
+    # Convert back to tensors
+    audio1 = torch.from_numpy(audio1_padded)
+    audio2 = torch.from_numpy(audio2_padded)
+
+    return audio1, audio2
 
 
 def print_waveform(
@@ -95,11 +273,14 @@ def print_waveform(
     fig.subplots_adjust(left=left_margin, right=right_margin)
     plt.tight_layout()
     plt.savefig(file_name)
+    plt.close()
 
 
 ### Define a function to print the figure
 def print_figure(audio_path, figure_title, log_spectrogram, sr):
-    # Visualize the original and equalized Mel spectrograms
+    # # Visualize the original and equalized Mel spectrograms
+    # if isinstance(log_spectrogram, torch.Tensor):
+    #     log_spectrogram = log_spectrogram.cpu().numpy()
     plt.figure(figsize=(12, 8))
     plt.subplot(1, 1, 1)
     librosa.display.specshow(log_spectrogram, sr=sr, x_axis="time", y_axis="mel")
@@ -108,6 +289,7 @@ def print_figure(audio_path, figure_title, log_spectrogram, sr):
 
     plt.tight_layout()
     plt.savefig(audio_path)
+    plt.close()
 
 
 # Define a function to print the Euclidean distance figure
@@ -132,7 +314,7 @@ def print_euclidean_distance_figure(
 
 
 ### convert audio_waveform to audio as a .wav file
-def save_wav(audio_waveform, sr, wav_file_path):
+def save_wav(audio_waveform, sr, wav_file_path, format="wav"):
     # Convert the 1D NumPy array to a 2D array with shape [1, N]
     audio_waveform_2d = np.expand_dims(audio_waveform, axis=0)
     # Convert the NumPy array to a PyTorch tensor
@@ -142,5 +324,86 @@ def save_wav(audio_waveform, sr, wav_file_path):
         wav_file_path,
         audio_waveform_tensor,
         sr,
-        format="wav",
+        format=format,
     )
+
+
+def clean_text(text, clean=True, strip=False, lower=False):
+    if clean:
+        for symbol in "_-!'(),.:;?":
+            text = text.replace(symbol, "")
+    if strip:
+        text = text.strip()
+    if lower:
+        text = text.lower()
+    return text
+
+
+def mfccs_class_ids_from_files(directory_path, files, mfccs, class_ids, class_id):
+    for file in files:
+        if file.endswith(".npy"):
+            # print(f"{directory_path}/{file}")
+            mfcc = np.load(f"{directory_path}/{file}")
+            mfccs.append(mfcc)
+            class_ids.append(class_id)
+    return mfccs, class_ids
+
+
+def shuffle_and_split(files, split_ratio=0.8):
+    # select from recorded_files into two random sets, one for training and one for inference
+    np.random.shuffle(files)
+
+    # split recorded_files into two arrays
+    files_train = files[: int(split_ratio * len(files))]
+    files_test = files[int((split_ratio) * len(files)) :]
+    # print(f"Train: {len(files_train)} Test: {len(files_test)}")
+    return files_train, files_test
+
+
+def get_accuracy_stats(
+    true_positives, true_negatives, false_positives, false_negatives
+):
+    # calculate accuracy
+    accuracy = (true_positives + true_negatives) / (
+        true_positives + false_positives + false_negatives + true_negatives
+    )
+
+    # calculate precision
+    precision = true_positives / (true_positives + false_positives)
+
+    # calculate recall
+    recall = true_positives / (true_positives + false_negatives)
+
+    # calculate specificity
+    specificity = true_negatives / (true_negatives + false_positives)
+
+    # calculate F1 score
+    f1_score = 2 * (precision * recall) / (precision + recall)
+
+    return accuracy, precision, recall, specificity, f1_score
+
+
+def get_confusion_stats(df):
+    true_positives = len(
+        df[
+            (df["test_class"] == CLASS_RECORDED)
+            & (df["predicted_class"] == CLASS_RECORDED)
+        ]
+    )
+
+    # calculate true negatives
+    true_negatives = len(
+        df[(df["test_class"] == CLASS_TTS) & (df["predicted_class"] == CLASS_TTS)]
+    )
+
+    # calculate false positives
+    false_positives = len(
+        df[(df["test_class"] == CLASS_TTS) & (df["predicted_class"] == CLASS_RECORDED)]
+    )
+
+    # calculate false negatives
+    false_negatives = len(
+        df[(df["test_class"] == CLASS_RECORDED) & (df["predicted_class"] == CLASS_TTS)]
+    )
+
+    return true_positives, true_negatives, false_positives, false_negatives

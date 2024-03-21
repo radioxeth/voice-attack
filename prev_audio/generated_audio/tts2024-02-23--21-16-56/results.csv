@@ -1,0 +1,81 @@
+id,pair_id,text,transcript,filename,tts_distance
+1,1,forallintensivepurposes,forallintensivepurposes,generated_audio/tts2024-02-23--21-16-56/For all intensive purposes.wav,0
+2,1,forallintentsandpurposes,forallintentsandpurposes,generated_audio/tts2024-02-23--21-16-56/For all intents and purposes.wav,0
+3,2,nipitinthebutt,nextisintheback,generated_audio/tts2024-02-23--21-16-56/Nip it in the butt.wav,7
+4,2,nipitinthebud,dickitintheback,generated_audio/tts2024-02-23--21-16-56/Nip it in the bud.wav,6
+5,3,selfdepreciating,selfdeprecating,generated_audio/tts2024-02-23--21-16-56/Selfdepreciating.wav,1
+6,3,selfdeprecating,selfdeprecating,generated_audio/tts2024-02-23--21-16-56/Selfdeprecating.wav,0
+7,4,escapegoat,escape,generated_audio/tts2024-02-23--21-16-56/Escape goat.wav,4
+8,4,scapegoat,skateboard,generated_audio/tts2024-02-23--21-16-56/Scapegoat.wav,5
+9,5,mutepoint,mutepeentnew,generated_audio/tts2024-02-23--21-16-56/Mute point.wav,5
+10,5,mootpoint,thankyou,generated_audio/tts2024-02-23--21-16-56/Moot point.wav,9
+11,6,oldtimersdisease,oldtimersdisease,generated_audio/tts2024-02-23--21-16-56/Oldtimers disease.wav,0
+12,6,alzheimersdisease,alzheimersdisease,generated_audio/tts2024-02-23--21-16-56/Alzheimers disease.wav,0
+13,7,doggydogworld,thecutwhodiedhijabwereruled,generated_audio/tts2024-02-23--21-16-56/Doggydog world.wav,21
+14,7,dogeatdogworld,buthetoldwereworked,generated_audio/tts2024-02-23--21-16-56/Dogeatdog world.wav,13
+15,8,lacktoastandtolerant,lethostintolerant,generated_audio/tts2024-02-23--21-16-56/Lack toast and tolerant.wav,7
+16,8,lactoseintolerant,lactusintolerant,generated_audio/tts2024-02-23--21-16-56/Lactose intolerant.wav,2
+17,9,bowlinachinashop,lawinachinashop,generated_audio/tts2024-02-23--21-16-56/Bowl in a china shop.wav,3
+18,9,bullinachinashop,doinachinashop,generated_audio/tts2024-02-23--21-16-56/Bull in a china shop.wav,4
+19,10,deepseeded,takeseequine,generated_audio/tts2024-02-23--21-16-56/Deepseeded.wav,9
+20,10,deepseated,itssitting,generated_audio/tts2024-02-23--21-16-56/Deepseated.wav,9
+21,11,takenforgranite,takenforgranted,generated_audio/tts2024-02-23--21-16-56/Taken for granite.wav,2
+22,11,takenforgranted,takingforgranted,generated_audio/tts2024-02-23--21-16-56/Taken for granted.wav,2
+23,12,caseandpoint,caseinpoint,generated_audio/tts2024-02-23--21-16-56/Case and point.wav,2
+24,12,caseinpoint,caseinpoint,generated_audio/tts2024-02-23--21-16-56/Case in point.wav,0
+25,13,anescapegoat,andescapecode,generated_audio/tts2024-02-23--21-16-56/An escape goat.wav,4
+26,13,ascapegoat,ascapegoat,generated_audio/tts2024-02-23--21-16-56/A scapegoat.wav,0
+27,14,passmustard,petέχers,generated_audio/tts2024-02-23--21-16-56/Pass mustard.wav,9
+28,14,passmuster,passmrsundtard,generated_audio/tts2024-02-23--21-16-56/Pass muster.wav,6
+29,15,ontenderhooks,ontenderhooks,generated_audio/tts2024-02-23--21-16-56/On tender hooks.wav,0
+30,15,ontenterhooks,ontenturhus,generated_audio/tts2024-02-23--21-16-56/On tenterhooks.wav,4
+31,16,tongueandcheek,thanmomekaatracina,generated_audio/tts2024-02-23--21-16-56/Tongue and cheek.wav,14
+32,16,tongueincheek,takeincheat,generated_audio/tts2024-02-23--21-16-56/Tongue in cheek.wav,6
+33,17,cardshark,cardshort,generated_audio/tts2024-02-23--21-16-56/Card shark.wav,2
+34,17,cardsharp,cardshot,generated_audio/tts2024-02-23--21-16-56/Card sharp.wav,3
+35,18,dampsquid,downsquint,generated_audio/tts2024-02-23--21-16-56/Damp squid.wav,5
+36,18,dampsquib,downasquare,generated_audio/tts2024-02-23--21-16-56/Damp squib.wav,7
+37,19,curlupinthefeebleposition,curlupinthefebelposition,generated_audio/tts2024-02-23--21-16-56/Curl up in the feeble position.wav,3
+38,19,curlupinthefetalposition,carupinthefetalposition,generated_audio/tts2024-02-23--21-16-56/Curl up in the fetal position.wav,2
+39,20,ahardroadtohoe,ahardroadtohorror,generated_audio/tts2024-02-23--21-16-56/A hard road to hoe.wav,4
+40,20,ahardrowtohoe,aheartwroteforheart,generated_audio/tts2024-02-23--21-16-56/A hard row to hoe.wav,11
+41,21,expatriot,xpatriot,generated_audio/tts2024-02-23--21-16-56/Expatriot.wav,1
+42,21,expatriate,expatriate,generated_audio/tts2024-02-23--21-16-56/Expatriate.wav,0
+43,22,bitingmytime,fightingmytime,generated_audio/tts2024-02-23--21-16-56/Biting my time.wav,3
+44,22,bidingmytime,fightingmytime,generated_audio/tts2024-02-23--21-16-56/Biding my time.wav,4
+45,23,antidotalevidence,andtodoubleevidence,generated_audio/tts2024-02-23--21-16-56/Antidotal evidence.wav,5
+46,23,anecdotalevidence,andatotalevidence,generated_audio/tts2024-02-23--21-16-56/Anecdotal evidence.wav,3
+47,24,circussized,circussized,generated_audio/tts2024-02-23--21-16-56/Circussized.wav,0
+48,24,circumcised,secondsized,generated_audio/tts2024-02-23--21-16-56/Circumcised.wav,8
+49,25,hungerpains,hungerpange,generated_audio/tts2024-02-23--21-16-56/Hunger pains.wav,3
+50,25,hungerpangs,hangs,generated_audio/tts2024-02-23--21-16-56/Hunger pangs.wav,6
+51,26,flushoutthedetails,ofthedeliciousplusheyedpizzashowtoeatthiswhydosomanygoodcatfoodsomeofthemareincarnatedwhatwerethebestdollsapplied,generated_audio/tts2024-02-23--21-16-56/Flush out the details.wav,97
+52,26,fleshoutthedetails,plusatthedayssaleease,generated_audio/tts2024-02-23--21-16-56/Flesh out the details.wav,14
+53,27,hesawolfincheapclothing,asawolfandcheapclothing,generated_audio/tts2024-02-23--21-16-56/Hes a wolf in cheap clothing.wav,4
+54,27,hesawolfinsheepsclothing,asawolfandsheepsclothing,generated_audio/tts2024-02-23--21-16-56/Hes a wolf in sheeps clothing.wav,4
+55,28,premadonna,primanfeuànamいたone,generated_audio/tts2024-02-23--21-16-56/PreMadonna.wav,12
+56,28,primadonna,mayذاbeonsouthkoreaabsourfortwoweeksletsseethatnexttimeiwilltalktoyoulateronthequestionyouseesincethisyear3monthswilltakesomemoneyforgodzilla,generated_audio/tts2024-02-23--21-16-56/Prima donna.wav,133
+57,29,socialleper,sociallepper,generated_audio/tts2024-02-23--21-16-56/Social leper.wav,1
+58,29,socialpariah,socialpremier,generated_audio/tts2024-02-23--21-16-56/Social pariah.wav,5
+59,30,givefreerein,ifwering,generated_audio/tts2024-02-23--21-16-56/Give free rein.wav,7
+60,30,givefreereign,ifweringring,generated_audio/tts2024-02-23--21-16-56/Give free reign.wav,10
+61,31,makeendsmeat,makeendsmeet,generated_audio/tts2024-02-23--21-16-56/Make ends meat.wav,1
+62,31,makeendsmeet,makeendsmeet,generated_audio/tts2024-02-23--21-16-56/Make ends meet.wav,0
+63,32,rightfromthegecko,rightfromthegacker,generated_audio/tts2024-02-23--21-16-56/Right from the gecko.wav,3
+64,32,rightfromthegetgo,rightfromthegetgo,generated_audio/tts2024-02-23--21-16-56/Right from the getgo.wav,0
+65,33,stockhomesyndrome,stockholmsyndrome,generated_audio/tts2024-02-23--21-16-56/Stock home syndrome.wav,2
+66,33,stockholmsyndrome,stockholmsyndrome,generated_audio/tts2024-02-23--21-16-56/Stockholm syndrome.wav,0
+67,34,chesterdrawers,chesterdrawers,generated_audio/tts2024-02-23--21-16-56/Chester drawers.wav,0
+68,34,chestofdrawers,chestofdrawers,generated_audio/tts2024-02-23--21-16-56/Chest of drawers.wav,0
+69,35,beckoncall,backandcall,generated_audio/tts2024-02-23--21-16-56/Beckon call.wav,3
+70,35,beckandcall,backandcold,generated_audio/tts2024-02-23--21-16-56/Beck and call.wav,3
+71,36,fullproof,fullprivilege,generated_audio/tts2024-02-23--21-16-56/Fullproof.wav,7
+72,36,foolproof,soproof,generated_audio/tts2024-02-23--21-16-56/Foolproof.wav,3
+73,37,twopeasinapot,twopeasinapot,generated_audio/tts2024-02-23--21-16-56/Two peas in a pot.wav,0
+74,37,twopeasinapod,twopeasinapot,generated_audio/tts2024-02-23--21-16-56/Two peas in a pod.wav,1
+75,38,onthespurtofthemoment,onthespurofthemoment,generated_audio/tts2024-02-23--21-16-56/On the spurt of the moment.wav,1
+76,38,onthespurofthemoment,onthespurofthemoment,generated_audio/tts2024-02-23--21-16-56/On the spur of the moment.wav,0
+77,39,mindbottling,mightloveonly,generated_audio/tts2024-02-23--21-16-56/Mindbottling.wav,10
+78,39,mindboggling,mindbubbling,generated_audio/tts2024-02-23--21-16-56/Mindboggling.wav,3
+79,40,ipleadthefifthcommandment,ipleadthefifthcommandmint,generated_audio/tts2024-02-23--21-16-56/I plead the Fifth Commandment.wav,1
+80,40,ipleadthefifthamendment,ipleadthefifthamendment,generated_audio/tts2024-02-23--21-16-56/I plead the Fifth Amendment.wav,0
