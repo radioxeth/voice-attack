@@ -30,7 +30,7 @@ Leveraging Mel Frequency Cepstral Coefficients to Identify Machine Generated Aud
 ## MFCCs
 
 *\*available upon request*
-MFCCs for recorded and generated samples are saved in `mfcc_generated.zip` and `mfcc_recorded.zip`, respectively.
+MFCCs for recorded and generated samples are saved in `mfcc_recorded.zip` and `mfcc_generated.zip`, respectively.
 <hr>
 
 `mfcc_recorded.zip`:
