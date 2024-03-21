@@ -1,12 +1,10 @@
-**/*.png
 **/*.flac
 **/*.wav
 **/*.mp3
-**/*.zip
 **/*.pyc
 **/*.npy
 **/*.joblib
-cv-corpus-16.1-2023-12-06-en.tar.gz
-cv-corpus-16.1-2023-12-06-en.tar
+**/*.zip
+
 cuda_12.3.2_545.23.08_linux.run
 cuda-repo-wsl-ubuntu-12-3-local_12.3.2-1_amd64.deb
