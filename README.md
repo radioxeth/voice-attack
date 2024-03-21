@@ -72,27 +72,31 @@ k-means results of testing for generated and recorded samples are located in kme
 ![Experiment Design](readme_images/experiment-design-solid.png)
 
 <br>
-*Experiment Design*
+
+*\*Experiment Design*
 
 <hr>
 
 ![TTS-STT design](readme_images/tts_solid.png)
 
 <br>
-*TTS-STT design*
+
+*\*TTS-STT design*
 
 <hr>
 
 ![K-means transformation design](readme_images/k_means_transformation_solid.png)
 
 <br>
-*K-means transformation design*
+
+*\*K-means transformation design*
 
 <hr>
 
 ![Naive Bayes PCA transformation design](readme_images/pca_transform_solid.png)
 
 <br>
-*Naive Bayes PCA transformation design*
+
+*\*Naive Bayes PCA transformation design*
 
 <hr>
