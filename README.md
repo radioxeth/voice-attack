@@ -69,14 +69,22 @@ k-means results of testing for generated and recorded samples are located in kme
   - `results_mfcc{n_mfcc}_round{n_round}.csv`
 
 ## Experiment Design
-![Experiment Design](/experiment-design-solid.png)
+![Experiment Design](readme_images/experiment-design-solid.png)
 *Experiment Design*
 
-![TTS-STT design](/tts_solid.png)
+<hr>
+
+![TTS-STT design](readme_images/tts_solid.png)
 *TTS-STT design*
 
-![K-means transformation design](/k_means_transformation_solid.png)
+<hr>
+
+![K-means transformation design](readme_images/k_means_transformation_solid.png)
 *K-means transformation design*
 
-![Naive Bayes PCA transformation design](/pca_transform_solid.png)
+<hr>
+
+![Naive Bayes PCA transformation design](readme_images/pca_transform_solid.png)
 *Naive Bayes PCA transformation design*
+
+<hr>
